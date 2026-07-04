@@ -4,6 +4,18 @@ All notable changes to this package are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-05
+
+### Changed
+- Redesigned the linking screen into a centered pairing view: the QR sits on a rounded white
+  card, the link code copies to the clipboard on click, and an animated "Waiting for approval"
+  indicator shows the window is polling.
+- Scan cards polished: colored status badge (Done / Processing / Error) overlaid on the preview,
+  glb file size in the caption, a scan-type placeholder while the preview loads, hover highlight.
+- Import now shows a progress bar with percentage on the card; after a successful import the
+  button becomes "Import again".
+- Nicer empty state, scan counter in the header, animated loading labels, and a window tab icon.
+
 ## [0.1.0] - 2026-06-23
 
 ### Added

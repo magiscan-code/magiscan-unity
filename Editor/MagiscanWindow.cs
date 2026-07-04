@@ -40,7 +40,8 @@ namespace Magiscan.Editor
         public static void ShowWindow()
         {
             var window = GetWindow<MagiscanWindow>();
-            window.titleContent = new GUIContent("Magiscan");
+            var icon = EditorGUIUtility.IconContent(EditorGUIUtility.isProSkin ? "d_PreMatCube" : "PreMatCube").image;
+            window.titleContent = new GUIContent("Magiscan", icon);
             window.minSize = new Vector2(360f, 420f);
             window.Show();
         }
@@ -135,17 +136,43 @@ namespace Magiscan.Editor
 
         void BuildLinking()
         {
-            _content.Add(Header("Connect"));
-            _content.Add(Paragraph(_link.StatusMessage ?? "Starting…"));
+            // A centered "pairing screen" column, vertically balanced in the window.
+            var column = new VisualElement();
+            column.style.flexGrow = 1f;
+            column.style.justifyContent = Justify.Center;
+            column.style.alignItems = Align.Center;
 
-            if (!string.IsNullOrEmpty(_link.UserCode))
+            var title = new Label("Connect to Magiscan");
+            title.style.fontSize = 15;
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.style.marginBottom = 4;
+            column.Add(title);
+
+            if (string.IsNullOrEmpty(_link.UserCode))
             {
+                var starting = new Label("Requesting a link code");
+                starting.style.opacity = 0.6f;
+                starting.style.marginTop = 8;
+                AnimateEllipsis(starting, "Requesting a link code");
+                column.Add(starting);
+            }
+            else
+            {
+                var subtitle = new Label("Scan this code with the Magiscan app");
+                subtitle.style.opacity = 0.6f;
+                subtitle.style.marginBottom = 14;
+                column.Add(subtitle);
+
                 EnsureQrTexture(_link.UserCode);
 
-                var qrFrame = new VisualElement();
-                qrFrame.style.alignItems = Align.Center;
-                qrFrame.style.marginTop = 6;
-                qrFrame.style.marginBottom = 6;
+                // White rounded card around the QR (the texture carries its own quiet zone).
+                var qrCard = new VisualElement();
+                qrCard.style.backgroundColor = Color.white;
+                qrCard.style.borderTopLeftRadius = 12;
+                qrCard.style.borderTopRightRadius = 12;
+                qrCard.style.borderBottomLeftRadius = 12;
+                qrCard.style.borderBottomRightRadius = 12;
+                qrCard.style.overflow = Overflow.Hidden;
 
                 var img = new Image { image = _qrTexture, scaleMode = ScaleMode.ScaleToFit };
                 if (_qrTexture != null)
@@ -153,23 +180,73 @@ namespace Magiscan.Editor
                     img.style.width = _qrTexture.width;
                     img.style.height = _qrTexture.height;
                 }
-                qrFrame.Add(img);
-                _content.Add(qrFrame);
+                qrCard.Add(img);
+                column.Add(qrCard);
 
-                _content.Add(Paragraph("In the Magiscan app: Linked Devices ▸ Scan QR, then approve."));
+                var hint = new Label("Magiscan app ▸ Linked Devices ▸ Scan QR");
+                hint.style.fontSize = 10;
+                hint.style.opacity = 0.45f;
+                hint.style.marginTop = 10;
+                column.Add(hint);
 
-                var code = new Label(_link.UserCode);
-                code.style.unityTextAlign = TextAnchor.MiddleCenter;
-                code.style.unityFontStyleAndWeight = FontStyle.Bold;
-                code.style.opacity = 0.6f;
-                code.style.marginTop = 2;
+                var code = new Label(_link.UserCode)
+                {
+                    tooltip = "Click to copy",
+                };
                 code.style.fontSize = 10;
-                _content.Add(code);
+                code.style.opacity = 0.5f;
+                code.style.marginTop = 2;
+                code.RegisterCallback<ClickEvent>(_ =>
+                {
+                    EditorGUIUtility.systemCopyBuffer = _link.UserCode;
+                    ShowNotification(new GUIContent("Code copied"));
+                });
+                column.Add(code);
+
+                // "Waiting for approval…" with a pulsing amber dot. The label has a fixed min width
+                // so the animated dots don't make the centered row jiggle.
+                var waitingRow = new VisualElement();
+                waitingRow.style.flexDirection = FlexDirection.Row;
+                waitingRow.style.alignItems = Align.Center;
+                waitingRow.style.marginTop = 14;
+
+                var dot = new VisualElement();
+                dot.style.width = 8;
+                dot.style.height = 8;
+                dot.style.borderTopLeftRadius = 4;
+                dot.style.borderTopRightRadius = 4;
+                dot.style.borderBottomLeftRadius = 4;
+                dot.style.borderBottomRightRadius = 4;
+                dot.style.backgroundColor = new Color(0.95f, 0.72f, 0.22f);
+                dot.style.marginRight = 6;
+                AnimatePulse(dot);
+                waitingRow.Add(dot);
+
+                var waiting = new Label("Waiting for approval");
+                waiting.style.opacity = 0.7f;
+                waiting.style.minWidth = 150;
+                waiting.style.unityTextAlign = TextAnchor.MiddleLeft;
+                AnimateEllipsis(waiting, "Waiting for approval");
+                waitingRow.Add(waiting);
+                column.Add(waitingRow);
+
+                // Surface transient poll problems (e.g. network retry) without leaving the screen.
+                if (!string.IsNullOrEmpty(_link.StatusMessage) && _link.StatusMessage.StartsWith("Network error"))
+                {
+                    var warn = new Label(_link.StatusMessage);
+                    warn.style.fontSize = 10;
+                    warn.style.color = new Color(0.95f, 0.72f, 0.22f);
+                    warn.style.marginTop = 4;
+                    column.Add(warn);
+                }
             }
 
             var cancel = new Button(() => { _link.Cancel(); Rebuild(); }) { text = "Cancel" };
-            cancel.style.marginTop = 10;
-            _content.Add(cancel);
+            cancel.style.marginTop = 16;
+            cancel.style.minWidth = 120;
+            column.Add(cancel);
+
+            _content.Add(column);
         }
 
         void EnsureQrTexture(string userCode)
@@ -199,7 +276,7 @@ namespace Magiscan.Editor
             toolbar.style.justifyContent = Justify.SpaceBetween;
             toolbar.style.marginBottom = 8;
 
-            var title = Header("Your scans");
+            var title = Header(_tasks.Count > 0 ? $"Your scans · {_tasks.Count}" : "Your scans");
             title.style.marginBottom = 0;
             toolbar.Add(title);
 
@@ -217,7 +294,9 @@ namespace Magiscan.Editor
 
             if (_loadingTasks)
             {
-                _content.Add(Paragraph("Loading…"));
+                var loading = Paragraph("Loading scans");
+                AnimateEllipsis(loading, "Loading scans");
+                _content.Add(loading);
                 return;
             }
 
@@ -231,7 +310,30 @@ namespace Magiscan.Editor
 
             if (_tasks == null || _tasks.Count == 0)
             {
-                _content.Add(Paragraph("No scans yet. Create one in the Magiscan app, then press Refresh."));
+                var empty = new VisualElement();
+                empty.style.flexGrow = 1f;
+                empty.style.justifyContent = Justify.Center;
+                empty.style.alignItems = Align.Center;
+
+                var emptyTitle = new Label("No scans yet");
+                emptyTitle.style.fontSize = 14;
+                emptyTitle.style.unityFontStyleAndWeight = FontStyle.Bold;
+                emptyTitle.style.opacity = 0.8f;
+                emptyTitle.style.marginBottom = 4;
+                empty.Add(emptyTitle);
+
+                var emptyHint = new Label("Create a scan in the Magiscan app,\nthen press Refresh.");
+                emptyHint.style.unityTextAlign = TextAnchor.MiddleCenter;
+                emptyHint.style.whiteSpace = WhiteSpace.Normal;
+                emptyHint.style.opacity = 0.55f;
+                empty.Add(emptyHint);
+
+                var emptyRefresh = new Button(RefreshTasks) { text = "Refresh" };
+                emptyRefresh.style.marginTop = 10;
+                emptyRefresh.style.minWidth = 90;
+                empty.Add(emptyRefresh);
+
+                _content.Add(empty);
                 return;
             }
 
@@ -271,53 +373,120 @@ namespace Magiscan.Editor
             _loadMoreRow.Add(more);
         }
 
+        static readonly Color CardBg = new Color(0f, 0f, 0f, 0.15f);
+        static readonly Color CardBgHover = new Color(0f, 0f, 0f, 0.28f);
+
         VisualElement BuildTaskCard(MagiscanTask task)
         {
             var card = new VisualElement();
-            card.style.width = 150;
+            card.style.width = 156;
             card.style.marginRight = 8;
             card.style.marginBottom = 8;
-            card.style.paddingBottom = 6;
-            card.style.borderTopLeftRadius = 6;
-            card.style.borderTopRightRadius = 6;
-            card.style.borderBottomLeftRadius = 6;
-            card.style.borderBottomRightRadius = 6;
-            card.style.backgroundColor = new Color(0f, 0f, 0f, 0.15f);
+            card.style.paddingBottom = 8;
+            card.style.borderTopLeftRadius = 8;
+            card.style.borderTopRightRadius = 8;
+            card.style.borderBottomLeftRadius = 8;
+            card.style.borderBottomRightRadius = 8;
+            card.style.backgroundColor = CardBg;
             card.style.overflow = Overflow.Hidden;
+            card.RegisterCallback<MouseEnterEvent>(_ => card.style.backgroundColor = CardBgHover);
+            card.RegisterCallback<MouseLeaveEvent>(_ => card.style.backgroundColor = CardBg);
+
+            // Preview: placeholder underneath, image stretched on top, status badge overlaid.
+            var previewArea = new VisualElement();
+            previewArea.style.height = 132;
+            previewArea.style.backgroundColor = new Color(0f, 0f, 0f, 0.25f);
+            previewArea.style.justifyContent = Justify.Center;
+            previewArea.style.alignItems = Align.Center;
+
+            var placeholder = new Label(string.IsNullOrEmpty(task.ScanType) ? "3D" : task.ScanType);
+            placeholder.style.fontSize = 16;
+            placeholder.style.unityFontStyleAndWeight = FontStyle.Bold;
+            placeholder.style.opacity = 0.25f;
+            previewArea.Add(placeholder);
 
             var preview = new Image { scaleMode = ScaleMode.ScaleAndCrop };
-            preview.style.height = 130;
-            preview.style.backgroundColor = new Color(0f, 0f, 0f, 0.25f);
+            preview.style.position = Position.Absolute;
+            preview.style.left = 0;
+            preview.style.right = 0;
+            preview.style.top = 0;
+            preview.style.bottom = 0;
+            previewArea.Add(preview);
             LoadPreview(task, preview);
-            card.Add(preview);
+
+            previewArea.Add(BuildStatusBadge(task));
+            card.Add(previewArea);
 
             var name = new Label(string.IsNullOrEmpty(task.Name) ? "(untitled)" : task.Name);
             name.style.unityFontStyleAndWeight = FontStyle.Bold;
-            name.style.marginLeft = 6;
-            name.style.marginRight = 6;
-            name.style.marginTop = 4;
+            name.style.marginLeft = 8;
+            name.style.marginRight = 8;
+            name.style.marginTop = 6;
             name.style.whiteSpace = WhiteSpace.Normal;
             card.Add(name);
 
-            var meta = new Label($"{task.ScanType} · {task.Status}");
+            var glb = task.FindModel("glb");
+            var meta = new Label(glb != null ? $"{task.ScanType} · {FormatSize(glb.FileSize)}" : task.ScanType);
             meta.style.fontSize = 10;
             meta.style.opacity = 0.6f;
-            meta.style.marginLeft = 6;
-            meta.style.marginRight = 6;
+            meta.style.marginLeft = 8;
+            meta.style.marginRight = 8;
             card.Add(meta);
 
-            bool hasGlb = task.FindModel("glb") != null;
             var import = new Button { text = task.IsReady ? "Import" : task.Status };
-            import.style.marginLeft = 6;
-            import.style.marginRight = 6;
-            import.style.marginTop = 4;
-            import.SetEnabled(task.IsReady && hasGlb && GlbImporter.IsGltfastInstalled);
-            if (task.IsReady && !hasGlb)
+            import.style.marginLeft = 8;
+            import.style.marginRight = 8;
+            import.style.marginTop = 6;
+            import.SetEnabled(task.IsReady && glb != null && GlbImporter.IsGltfastInstalled);
+            if (task.IsReady && glb == null)
                 import.text = "No glb";
-            import.clicked += () => OnImportClicked(task, import);
             card.Add(import);
 
+            var progress = new ProgressBar { lowValue = 0f, highValue = 100f };
+            progress.style.display = DisplayStyle.None;
+            progress.style.marginLeft = 8;
+            progress.style.marginRight = 8;
+            progress.style.marginTop = 4;
+            card.Add(progress);
+
+            import.clicked += () => OnImportClicked(task, import, progress);
             return card;
+        }
+
+        VisualElement BuildStatusBadge(MagiscanTask task)
+        {
+            var badge = new VisualElement();
+            badge.style.position = Position.Absolute;
+            badge.style.top = 6;
+            badge.style.right = 6;
+            badge.style.flexDirection = FlexDirection.Row;
+            badge.style.alignItems = Align.Center;
+            badge.style.backgroundColor = new Color(0f, 0f, 0f, 0.55f);
+            badge.style.borderTopLeftRadius = 8;
+            badge.style.borderTopRightRadius = 8;
+            badge.style.borderBottomLeftRadius = 8;
+            badge.style.borderBottomRightRadius = 8;
+            badge.style.paddingLeft = 6;
+            badge.style.paddingRight = 6;
+            badge.style.paddingTop = 2;
+            badge.style.paddingBottom = 2;
+
+            var dot = new VisualElement();
+            dot.style.width = 6;
+            dot.style.height = 6;
+            dot.style.borderTopLeftRadius = 3;
+            dot.style.borderTopRightRadius = 3;
+            dot.style.borderBottomLeftRadius = 3;
+            dot.style.borderBottomRightRadius = 3;
+            dot.style.backgroundColor = StatusColor(task.ParsedStatus);
+            dot.style.marginRight = 4;
+            badge.Add(dot);
+
+            var label = new Label(string.IsNullOrEmpty(task.Status) ? "Unknown" : task.Status);
+            label.style.fontSize = 9;
+            label.style.color = new Color(0.95f, 0.95f, 0.95f);
+            badge.Add(label);
+            return badge;
         }
 
         // ---- Actions --------------------------------------------------------
@@ -397,7 +566,7 @@ namespace Magiscan.Editor
             UpdateLoadMoreRow();
         }
 
-        async void OnImportClicked(MagiscanTask task, Button button)
+        async void OnImportClicked(MagiscanTask task, Button button, ProgressBar progress)
         {
             var model = task.FindModel("glb");
             if (model == null)
@@ -407,25 +576,36 @@ namespace Magiscan.Editor
             }
 
             button.SetEnabled(false);
-            string original = button.text;
-            var progress = new Progress<float>(p => button.text = $"…{Mathf.RoundToInt(p * 100f)}%");
+            button.text = "Importing…";
+            progress.value = 0f;
+            progress.title = "0%";
+            progress.style.display = DisplayStyle.Flex;
+
+            var reporter = new Progress<float>(p =>
+            {
+                progress.value = p * 100f;
+                progress.title = $"{Mathf.RoundToInt(p * 100f)}%";
+            });
 
             try
             {
-                await GlbImporter.ImportIntoSceneAsync(_client, task, model, progress, _windowCts.Token);
+                await GlbImporter.ImportIntoSceneAsync(_client, task, model, reporter, _windowCts.Token);
                 ShowNotification(new GUIContent($"Imported “{task.Name}”."));
-                button.text = "Imported";
+                button.text = "Import again";
             }
             catch (OperationCanceledException)
             {
-                button.text = original;
-                button.SetEnabled(true);
+                button.text = "Import";
             }
             catch (Exception e)
             {
                 Debug.LogError($"[Magiscan] Import failed: {e}");
                 ShowNotification(new GUIContent("Import failed — see Console."));
-                button.text = original;
+                button.text = "Import";
+            }
+            finally
+            {
+                progress.style.display = DisplayStyle.None;
                 button.SetEnabled(true);
             }
         }
@@ -502,6 +682,48 @@ namespace Magiscan.Editor
         }
 
         // ---- Small UI helpers ----------------------------------------------
+
+        static Color StatusColor(MagiscanScanStatus status)
+        {
+            switch (status)
+            {
+                case MagiscanScanStatus.Done: return new Color(0.35f, 0.78f, 0.40f);
+                case MagiscanScanStatus.Error: return new Color(0.90f, 0.32f, 0.28f);
+                case MagiscanScanStatus.Prepare:
+                case MagiscanScanStatus.InQueue:
+                case MagiscanScanStatus.Processing: return new Color(0.95f, 0.72f, 0.22f);
+                default: return new Color(0.6f, 0.6f, 0.6f);
+            }
+        }
+
+        static string FormatSize(long bytes)
+        {
+            if (bytes >= 1024L * 1024L) return $"{bytes / (1024f * 1024f):0.#} MB";
+            if (bytes >= 1024L) return $"{bytes / 1024f:0} KB";
+            return $"{bytes} B";
+        }
+
+        /// <summary>Cycles "text", "text.", "text..", "text..." while the label is on screen.</summary>
+        static void AnimateEllipsis(Label label, string baseText)
+        {
+            int step = 0;
+            label.schedule.Execute(() =>
+            {
+                step = (step + 1) % 4;
+                label.text = baseText + new string('.', step);
+            }).Every(400);
+        }
+
+        /// <summary>Softly pulses an element's opacity while it is on screen.</summary>
+        static void AnimatePulse(VisualElement element)
+        {
+            bool dim = false;
+            element.schedule.Execute(() =>
+            {
+                dim = !dim;
+                element.style.opacity = dim ? 0.35f : 1f;
+            }).Every(500);
+        }
 
         static Label Header(string text)
         {
