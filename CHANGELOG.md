@@ -4,6 +4,13 @@ All notable changes to this package are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-07-05
+
+### Changed
+- The scan grid is now responsive: the column count adapts to the window width, cards stretch to
+  fill each row exactly, and previews are always square. Relayouts on window resize and after
+  "Load more".
+
 ## [0.2.0] - 2026-07-05
 
 ### Changed

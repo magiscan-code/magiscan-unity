@@ -27,6 +27,8 @@ namespace Magiscan.Editor
         readonly Dictionary<string, Texture2D> _previewCache = new Dictionary<string, Texture2D>();
 
         const int PageSize = 50;
+        const float GridGap = 8f;
+        const float MinCardWidth = 150f;
 
         List<MagiscanTask> _tasks = new List<MagiscanTask>();
         bool _loadingTasks;
@@ -35,6 +37,8 @@ namespace Magiscan.Editor
         string _tasksError;
         VisualElement _grid;
         VisualElement _loadMoreRow;
+        float _lastGridWidth;
+        int _lastGridCount;
 
         [MenuItem("Window/Magiscan", false, 1100)]
         public static void ShowWindow()
@@ -343,6 +347,7 @@ namespace Magiscan.Editor
             _grid = new VisualElement();
             _grid.style.flexDirection = FlexDirection.Row;
             _grid.style.flexWrap = Wrap.Wrap;
+            _grid.RegisterCallback<GeometryChangedEvent>(_ => LayoutGrid());
             scroll.Add(_grid);
 
             foreach (var task in _tasks)
@@ -356,6 +361,36 @@ namespace Magiscan.Editor
             UpdateLoadMoreRow();
 
             _content.Add(scroll);
+        }
+
+        /// <summary>
+        /// Responsive grid: picks the column count from the available width (each card at least
+        /// <see cref="MinCardWidth"/> wide), stretches cards to fill the row exactly, and keeps
+        /// every preview square by matching its height to the card width.
+        /// </summary>
+        void LayoutGrid()
+        {
+            if (_grid == null) return;
+            float available = _grid.resolvedStyle.width;
+            int count = _grid.childCount;
+            if (float.IsNaN(available) || available <= 0f || count == 0) return;
+            if (Mathf.Abs(available - _lastGridWidth) < 0.5f && count == _lastGridCount) return;
+            _lastGridWidth = available;
+            _lastGridCount = count;
+
+            int columns = Mathf.Max(1, Mathf.FloorToInt((available + GridGap) / (MinCardWidth + GridGap)));
+            float cardWidth = (available - GridGap * (columns - 1)) / columns;
+
+            int i = 0;
+            foreach (var child in _grid.Children())
+            {
+                child.style.width = cardWidth;
+                child.style.marginRight = (i + 1) % columns == 0 ? 0f : GridGap;
+                var previewArea = child.Q<VisualElement>("magiscan-preview");
+                if (previewArea != null)
+                    previewArea.style.height = cardWidth;
+                i++;
+            }
         }
 
         void UpdateLoadMoreRow()
@@ -393,7 +428,8 @@ namespace Magiscan.Editor
             card.RegisterCallback<MouseLeaveEvent>(_ => card.style.backgroundColor = CardBg);
 
             // Preview: placeholder underneath, image stretched on top, status badge overlaid.
-            var previewArea = new VisualElement();
+            // Named so LayoutGrid can find it and keep it square (height = card width).
+            var previewArea = new VisualElement { name = "magiscan-preview" };
             previewArea.style.height = 132;
             previewArea.style.backgroundColor = new Color(0f, 0f, 0f, 0.25f);
             previewArea.style.justifyContent = Justify.Center;
@@ -545,6 +581,7 @@ namespace Magiscan.Editor
                     _tasks.Add(task);
                     _grid?.Add(BuildTaskCard(task)); // append only — keeps scroll position
                 }
+                LayoutGrid();
             }
             catch (OperationCanceledException)
             {
