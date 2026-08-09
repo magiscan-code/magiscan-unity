@@ -15,6 +15,17 @@ All notable changes to this package are documented here. The format is based on
 - The `com.unity.nuget.newtonsoft-json` dependency is now pinned at 3.0.2 (the lowest 3.x)
   instead of 3.2.1, so projects that already ship a newer Json package resolve without conflict.
 
+### Fixed
+- `MagiscanLinkController.Begin()` is no longer `async void`: the flow is exposed as an awaitable
+  `Running` task that never faults, and a throwing `Changed` subscriber can no longer abort the
+  link flow (it is logged instead). Covered by new `MagiscanLinkControllerTests`.
+- The Magiscan window now cancels in-flight work right before script compilation reloads the
+  domain, so it comes back in a consistent state instead of a stale "Waiting"/"Loading" view.
+- API calls now time out after 30 seconds instead of hanging forever on a dead connection.
+  Model and preview downloads are still unlimited — they have progress and can be cancelled.
+- Loading/pulse animations stop when their element leaves the panel (previously the scheduled
+  callbacks were never released).
+
 ### Removed
 - The dead `MAGISCAN_GLTFAST` define check (`GlbImporter.IsGltfastInstalled`). glTFast is a hard
   package dependency and is always present; the check could never report otherwise and only

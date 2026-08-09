@@ -57,10 +57,12 @@ namespace Magiscan.Editor
             _client = new MagiscanClient(settings, new UnityWebRequestHttpClient(), new EditorPrefsTokenStorage());
             _link = new MagiscanLinkController(_client);
             _link.Changed += OnLinkChanged;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
         }
 
         void OnDisable()
         {
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             if (_link != null) _link.Changed -= OnLinkChanged;
             _link?.Cancel();
 
@@ -72,6 +74,17 @@ namespace Magiscan.Editor
             foreach (var tex in _previewCache.Values)
                 if (tex != null) DestroyImmediate(tex);
             _previewCache.Clear();
+        }
+
+        /// <summary>
+        /// Script compilation reloads the domain and silently kills every in-flight task. Cancel
+        /// cleanly beforehand so a linking/loading window comes back in a consistent state
+        /// (CreateGUI runs again after the reload and rebuilds from the stored token).
+        /// </summary>
+        void OnBeforeAssemblyReload()
+        {
+            _link?.Cancel();
+            _windowCts?.Cancel();
         }
 
         void CreateGUI()
@@ -741,22 +754,24 @@ namespace Magiscan.Editor
         static void AnimateEllipsis(Label label, string baseText)
         {
             int step = 0;
-            label.schedule.Execute(() =>
+            var item = label.schedule.Execute(() =>
             {
                 step = (step + 1) % 4;
                 label.text = baseText + new string('.', step);
             }).Every(400);
+            label.RegisterCallback<DetachFromPanelEvent>(_ => item.Pause());
         }
 
         /// <summary>Softly pulses an element's opacity while it is on screen.</summary>
         static void AnimatePulse(VisualElement element)
         {
             bool dim = false;
-            element.schedule.Execute(() =>
+            var item = element.schedule.Execute(() =>
             {
                 dim = !dim;
                 element.style.opacity = dim ? 0.35f : 1f;
             }).Every(500);
+            element.RegisterCallback<DetachFromPanelEvent>(_ => item.Pause());
         }
 
         static Label Header(string text)

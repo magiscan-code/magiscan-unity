@@ -24,6 +24,10 @@ namespace Magiscan.Http
 
         /// <summary>Content type for <see cref="Body"/>, e.g. <c>"application/json"</c>.</summary>
         public string ContentType;
+
+        /// <summary>Request timeout in seconds; 0 = no timeout (large model downloads rely on
+        /// progress + cancellation instead).</summary>
+        public int TimeoutSeconds;
     }
 
     /// <summary>Result of an <see cref="HttpRequest"/>.</summary>

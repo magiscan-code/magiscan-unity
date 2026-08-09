@@ -19,6 +19,8 @@ namespace Magiscan.Http
             using (var uwr = new UnityWebRequest(request.Url, Method(request.Verb)))
             {
                 uwr.downloadHandler = new DownloadHandlerBuffer();
+                if (request.TimeoutSeconds > 0)
+                    uwr.timeout = request.TimeoutSeconds;
 
                 if (request.Body != null && request.Body.Length > 0)
                 {

@@ -17,6 +17,9 @@ namespace Magiscan
     {
         const string TokenHeader = "X-Integration-Token";
 
+        /// <summary>Timeout for API calls. Model/preview downloads are unlimited (progress + cancel).</summary>
+        const int ApiTimeoutSeconds = 30;
+
         readonly MagiscanSettings _settings;
         readonly IHttpClient _http;
         readonly ITokenStorage _tokens;
@@ -122,6 +125,7 @@ namespace Magiscan
                 Url = BaseUrl + path,
                 Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body)),
                 ContentType = "application/json",
+                TimeoutSeconds = ApiTimeoutSeconds,
             };
         }
 
@@ -131,7 +135,7 @@ namespace Magiscan
             if (string.IsNullOrEmpty(token))
                 throw new MagiscanUnauthorizedException();
 
-            var req = new HttpRequest { Verb = verb, Url = BaseUrl + path };
+            var req = new HttpRequest { Verb = verb, Url = BaseUrl + path, TimeoutSeconds = ApiTimeoutSeconds };
             req.Headers[TokenHeader] = token;
             return req;
         }

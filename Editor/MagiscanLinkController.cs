@@ -43,13 +43,23 @@ namespace Magiscan.Editor
         /// <summary>Raised on the main thread whenever any public property changes.</summary>
         public event Action Changed;
 
+        /// <summary>
+        /// The in-flight link attempt started by <see cref="Begin"/>; completes when the flow reaches
+        /// a terminal state. Never faults — failures surface via <see cref="State"/>. Lets tests and
+        /// callers await the flow instead of relying on fire-and-forget.
+        /// </summary>
+        public Task Running { get; private set; } = Task.CompletedTask;
+
         /// <summary>Begins a new link attempt. Safe to call again — cancels any previous attempt.</summary>
-        public async void Begin()
+        public void Begin()
         {
             Cancel();
             _cts = new CancellationTokenSource();
-            CancellationToken ct = _cts.Token;
+            Running = RunAsync(_cts.Token);
+        }
 
+        async Task RunAsync(CancellationToken ct)
+        {
             UserCode = null;
             SetState(LinkState.Starting, "Requesting a link code…");
 
@@ -143,6 +153,17 @@ namespace Magiscan.Editor
             Raise();
         }
 
-        void Raise() => Changed?.Invoke();
+        void Raise()
+        {
+            try
+            {
+                Changed?.Invoke();
+            }
+            catch (Exception e)
+            {
+                // A broken subscriber must not abort the link flow (or fault Running).
+                UnityEngine.Debug.LogException(e);
+            }
+        }
     }
 }
