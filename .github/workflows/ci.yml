@@ -1,0 +1,66 @@
+# EditMode tests on a matrix of Unity versions + package sanity checks.
+#
+# Required repository secrets (see https://game.ci/docs/github/activation):
+#   UNITY_LICENSE  — contents of a Unity Personal .ulf license file
+#   UNITY_EMAIL    — Unity account e-mail
+#   UNITY_PASSWORD — Unity account password
+#
+# Until the secrets are added, the "tests" job will fail at the activation step;
+# the "checks" job runs without any secrets.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Package sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PluginVersion matches package.json
+        run: |
+          PKG=$(jq -r .version package.json)
+          CODE=$(grep -oP 'PluginVersion = "\K[^"]+' Runtime/MagiscanSettings.cs)
+          echo "package.json: $PKG / MagiscanSettings.PluginVersion: $CODE"
+          test "$PKG" = "$CODE"
+
+      - name: Declared samples exist
+        run: |
+          for p in $(jq -r '.samples[]?.path' package.json); do
+            echo "checking $p"
+            test -d "$p"
+          done
+
+  tests:
+    name: EditMode (${{ matrix.unityVersion }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        unityVersion:
+          - 2021.3.45f1
+          - 2022.3.62f1
+          - 6000.0.58f1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.unityVersion }}
+
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: ${{ matrix.unityVersion }}
+          testMode: EditMode
+          packageMode: true
