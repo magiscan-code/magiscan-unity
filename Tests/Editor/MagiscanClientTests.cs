@@ -98,7 +98,7 @@ namespace Magiscan.Tests
 
             Wait(_client.GetTasksAsync(skip: 5, limit: 50));
 
-            Assert.AreEqual("https://magiscan.ar-generation.com:5124/integrations/tasks?skip=5&limit=50", _http.LastRequest.Url);
+            Assert.AreEqual("https://magiscan.ar-generation.com/integrations/tasks?skip=5&limit=50", _http.LastRequest.Url);
             Assert.AreEqual("tok_abc", _http.LastRequest.Headers["X-Integration-Token"]);
             Assert.IsFalse(_http.LastRequest.Headers.ContainsKey("skip"));
             Assert.IsFalse(_http.LastRequest.Headers.ContainsKey("limit"));

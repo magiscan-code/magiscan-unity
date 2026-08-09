@@ -3,8 +3,8 @@ namespace Magiscan
     /// <summary>Connection settings for the Magiscan API.</summary>
     public sealed class MagiscanSettings
     {
-        /// <summary>Default production server.</summary>
-        public const string DefaultBaseUrl = "https://magiscan.ar-generation.com:5124";
+        /// <summary>Default production server (standard HTTPS port — safe for corporate firewalls).</summary>
+        public const string DefaultBaseUrl = "https://magiscan.ar-generation.com";
 
         /// <summary>
         /// Integration type sent to <c>POST /link/start</c>. Allowed values: <c>"unity"</c>,

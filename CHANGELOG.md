@@ -4,6 +4,13 @@ All notable changes to this package are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- The default API endpoint no longer uses the non-standard port 5124 — the server is now
+  reachable over standard HTTPS (443), which works through corporate firewalls. Existing
+  clients pointing at `:5124` keep working; the server serves both.
+
 ## [0.2.1] - 2026-07-05
 
 ### Changed
