@@ -10,13 +10,16 @@ open scene — no manual file juggling.
 
 ## Requirements
 
-- **Unity 6** (6000.0) or newer. Tested on `6000.5.0f1`.
+- **Unity 2021.3 LTS or newer** (the CI test matrix targets 2021.3, 2022.3, and Unity 6;
+  primary development happens on Unity 6).
 - Internet access — dependencies (glTFast, Newtonsoft Json) are fetched automatically by the
-  Package Manager.
+  Package Manager. The API is served over standard HTTPS (443), so corporate firewalls are fine.
 - The **Magiscan** mobile app ([iOS / Android](https://magiscan.ar-generation.com)) with an
   account — used once, to approve the link by QR.
 
-The server address is built in; there is nothing to configure.
+The server address is built in and needs no configuration. For staging/QA there is an override:
+the **Advanced ▸ Server URL** field on the connect screen, or the `MAGISCAN_BASE_URL`
+environment variable.
 
 ## Installation
 
@@ -79,12 +82,21 @@ Inject your own `IHttpClient` to unit-test without the network, or your own `ITo
 to keep the token in a platform secure store. See `Samples~/RuntimeBrowser` for a complete
 runtime example (importable from the Package Manager's *Samples* tab).
 
+## Render pipelines (URP / HDRP)
+
+glTFast ships Built-in and **URP** shaders — imported scans render out of the box in both.
+Under **HDRP** common cases work, but exotic material setups may need manual adjustment;
+photogrammetry scans use one baked albedo texture, which converts cleanly in practice.
+If a model imports pink, check glTFast's shader/stripping notes for your pipeline.
+Mind the budget on mobile: raw scans are tens of thousands of triangles with a large texture.
+More detail in [`Documentation~/magiscan.md`](Documentation~/magiscan.md).
+
 ## Troubleshooting
 
 | Symptom | Fix |
 | --- | --- |
-| *"glTFast is not installed"*, Import disabled | The dependency installs automatically; if it didn't, add `com.unity.cloud.gltfast` in the Package Manager. |
-| List or previews don't load | Check your connection; the Console logs the reason as `[Magiscan] …`. |
+| Model downloaded but didn't import | Make sure `com.unity.cloud.gltfast` is present (it installs automatically as a dependency). |
+| List or previews don't load | Check your connection; the Console logs the reason as `[Magiscan] …`. Corporate TLS-inspection proxies can break requests — try from another network to confirm. |
 | Import disabled on a scan | The scan is still processing (not `Done`), or it has no `glb` model (e.g. a point cloud). |
 | Window returned to Connect on its own | The device was revoked from the app — link again. |
 | *"The link code expired"* | QR codes live for 10 minutes; press Connect to get a fresh one. |
