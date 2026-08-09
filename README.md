@@ -33,7 +33,7 @@ environment variable.
    https://github.com/magiscan-code/magiscan-unity.git
    ```
 
-   To pin a specific version, append a tag: `https://github.com/magiscan-code/magiscan-unity.git#v0.1.0`
+   To pin a specific version, append a tag: `https://github.com/magiscan-code/magiscan-unity.git#v0.3.0`
 
 **From disk:** clone this repository, then *Package Manager ▸ + ▸ Add package from disk…* and
 pick `package.json`. Or copy the folder into your project's `Packages/` directory (embedded).
