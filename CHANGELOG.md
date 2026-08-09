@@ -10,6 +10,10 @@ All notable changes to this package are documented here. The format is based on
 - The default API endpoint no longer uses the non-standard port 5124 — the server is now
   reachable over standard HTTPS (443), which works through corporate firewalls. Existing
   clients pointing at `:5124` keep working; the server serves both.
+- Minimum supported Unity version lowered from 6000.0 to **2021.3 LTS** — every API the package
+  uses is available there; CI will verify the matrix.
+- The `com.unity.nuget.newtonsoft-json` dependency is now pinned at 3.0.2 (the lowest 3.x)
+  instead of 3.2.1, so projects that already ship a newer Json package resolve without conflict.
 
 ## [0.2.1] - 2026-07-05
 
