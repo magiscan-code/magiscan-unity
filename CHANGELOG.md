@@ -15,6 +15,11 @@ All notable changes to this package are documented here. The format is based on
 - The `com.unity.nuget.newtonsoft-json` dependency is now pinned at 3.0.2 (the lowest 3.x)
   instead of 3.2.1, so projects that already ship a newer Json package resolve without conflict.
 
+### Removed
+- The dead `MAGISCAN_GLTFAST` define check (`GlbImporter.IsGltfastInstalled`). glTFast is a hard
+  package dependency and is always present; the check could never report otherwise and only
+  confused readers.
+
 ## [0.2.1] - 2026-07-05
 
 ### Changed

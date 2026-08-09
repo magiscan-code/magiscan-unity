@@ -293,9 +293,6 @@ namespace Magiscan.Editor
             toolbar.Add(buttons);
             _content.Add(toolbar);
 
-            if (!GlbImporter.IsGltfastInstalled)
-                _content.Add(ErrorBox("glTFast (com.unity.cloud.gltfast) is not installed — model import is disabled. Install it via the Package Manager."));
-
             if (_loadingTasks)
             {
                 var loading = Paragraph("Loading scans");
@@ -473,7 +470,7 @@ namespace Magiscan.Editor
             import.style.marginLeft = 8;
             import.style.marginRight = 8;
             import.style.marginTop = 6;
-            import.SetEnabled(task.IsReady && glb != null && GlbImporter.IsGltfastInstalled);
+            import.SetEnabled(task.IsReady && glb != null);
             if (task.IsReady && glb == null)
                 import.text = "No glb";
             card.Add(import);

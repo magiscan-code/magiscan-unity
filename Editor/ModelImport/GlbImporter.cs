@@ -17,14 +17,6 @@ namespace Magiscan.Editor.ModelImport
         /// <summary>Project-relative folder where imported models are written.</summary>
         public const string ModelsFolder = "Assets/Magiscan/Models";
 
-        /// <summary>True when the glTFast package is present (required to import glb).</summary>
-        public static bool IsGltfastInstalled =>
-#if MAGISCAN_GLTFAST
-            true;
-#else
-            false;
-#endif
-
         /// <summary>
         /// Downloads the model for <paramref name="task"/>, imports it, and instantiates it into the
         /// active scene. Returns the created instance. Must be called on the main thread.

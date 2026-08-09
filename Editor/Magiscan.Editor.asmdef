@@ -13,12 +13,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.unity.cloud.gltfast",
-            "expression": "",
-            "define": "MAGISCAN_GLTFAST"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }
