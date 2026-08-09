@@ -6,6 +6,13 @@ All notable changes to this package are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- The **Runtime Browser** sample declared in `package.json` now actually exists
+  (`Samples~/RuntimeBrowser`): link an account, browse scans, and load a glb with glTFast
+  during play mode.
+- The server URL can now be overridden for staging/QA: the `MAGISCAN_BASE_URL` environment
+  variable, or per-user via the new **Advanced ▸ Server URL** field on the connect screen.
+
 ### Changed
 - The default API endpoint no longer uses the non-standard port 5124 — the server is now
   reachable over standard HTTPS (443), which works through corporate firewalls. Existing

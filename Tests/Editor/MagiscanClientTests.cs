@@ -145,6 +145,20 @@ namespace Magiscan.Tests
         }
 
         [Test]
+        public void CreateDefault_UsesEnvVarOverride()
+        {
+            Environment.SetEnvironmentVariable(MagiscanSettings.BaseUrlEnvVar, "https://staging.example");
+            try
+            {
+                Assert.AreEqual("https://staging.example", MagiscanSettings.CreateDefault().BaseUrl);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(MagiscanSettings.BaseUrlEnvVar, null);
+            }
+        }
+
+        [Test]
         public void ErrorStatuses_MapToTypedExceptions()
         {
             _tokens.Save("tok");

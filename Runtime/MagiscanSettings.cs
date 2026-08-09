@@ -27,6 +27,26 @@ namespace Magiscan
         /// <summary>Plugin/app version (optional). Defaults to <see cref="PluginVersion"/>.</summary>
         public string AppVersion { get; set; } = PluginVersion;
 
-        public static MagiscanSettings CreateDefault() => new MagiscanSettings();
+        /// <summary>
+        /// Name of the environment variable that overrides <see cref="BaseUrl"/> when set —
+        /// lets QA and CI point the plugin at a staging server without code changes.
+        /// </summary>
+        public const string BaseUrlEnvVar = "MAGISCAN_BASE_URL";
+
+        public static MagiscanSettings CreateDefault()
+        {
+            var settings = new MagiscanSettings();
+            try
+            {
+                string overrideUrl = System.Environment.GetEnvironmentVariable(BaseUrlEnvVar);
+                if (!string.IsNullOrEmpty(overrideUrl))
+                    settings.BaseUrl = overrideUrl;
+            }
+            catch (System.Security.SecurityException)
+            {
+                // Restricted platforms may forbid reading environment variables — keep the default.
+            }
+            return settings;
+        }
     }
 }
