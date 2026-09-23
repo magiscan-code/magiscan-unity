@@ -1,12 +1,12 @@
 # EditMode tests on a matrix of Unity versions + package sanity checks.
 #
-# Required repository secrets (see https://game.ci/docs/github/activation):
+# Repository secrets used by the "tests" job (see https://game.ci/docs/github/activation):
 #   UNITY_LICENSE  — contents of a Unity Personal .ulf license file
 #   UNITY_EMAIL    — Unity account e-mail
 #   UNITY_PASSWORD — Unity account password
 #
-# Until the secrets are added, the "tests" job will fail at the activation step;
-# the "checks" job runs without any secrets.
+# Until UNITY_LICENSE is configured, the Unity steps are skipped (the job passes with a notice);
+# the "checks" job always runs and needs no secrets.
 
 name: CI
 
@@ -47,19 +47,26 @@ jobs:
           - 2021.3.45f1
           - 2022.3.62f1
           - 6000.0.58f1
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
     steps:
+      - name: Unity license not configured
+        if: env.UNITY_LICENSE == ''
+        run: echo "::notice::UNITY_LICENSE secret is not set — Unity EditMode tests skipped."
+
       - uses: actions/checkout@v4
+        if: env.UNITY_LICENSE != ''
 
       - uses: actions/cache@v4
+        if: env.UNITY_LICENSE != ''
         with:
           path: Library
           key: Library-${{ matrix.unityVersion }}
 
       - uses: game-ci/unity-test-runner@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        if: env.UNITY_LICENSE != ''
         with:
           unityVersion: ${{ matrix.unityVersion }}
           testMode: EditMode
