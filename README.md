@@ -17,9 +17,8 @@ open scene — no manual file juggling.
 - The **Magiscan** mobile app ([iOS / Android](https://magiscan.ar-generation.com)) with an
   account — used once, to approve the link by QR.
 
-The server address is built in and needs no configuration. For staging/QA there is an override:
-the **Advanced ▸ Server URL** field on the connect screen, or the `MAGISCAN_BASE_URL`
-environment variable.
+The server address is built in and needs no configuration. For staging/QA it can be overridden
+with the `MAGISCAN_BASE_URL` environment variable.
 
 ## Installation
 

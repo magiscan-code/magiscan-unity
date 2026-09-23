@@ -29,11 +29,8 @@ in the mobile app under *Linked Devices*.
 
 ### Changing the server (staging / QA)
 
-Priority, highest first:
-
-1. **Advanced ▸ Server URL** on the connect screen (stored per-user in `EditorPrefs`).
-2. The `MAGISCAN_BASE_URL` environment variable.
-3. The built-in default (`MagiscanSettings.DefaultBaseUrl`).
+Set the `MAGISCAN_BASE_URL` environment variable before launching Unity; otherwise the built-in
+default (`MagiscanSettings.DefaultBaseUrl`) is used.
 
 ## Architecture
 

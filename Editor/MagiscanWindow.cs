@@ -50,18 +50,7 @@ namespace Magiscan.Editor
             window.Show();
         }
 
-        /// <summary>EditorPrefs key holding a per-user base-URL override (staging/QA); empty = default.</summary>
-        const string BaseUrlOverrideKey = "Magiscan.BaseUrlOverride";
-
-        /// <summary>Editor override wins over the env var, which wins over the built-in default.</summary>
-        static MagiscanSettings CreateSettings()
-        {
-            var settings = MagiscanDeviceInfo.Apply(MagiscanSettings.CreateDefault());
-            string editorOverride = EditorPrefs.GetString(BaseUrlOverrideKey, string.Empty);
-            if (!string.IsNullOrEmpty(editorOverride))
-                settings.BaseUrl = editorOverride;
-            return settings;
-        }
+        static MagiscanSettings CreateSettings() => MagiscanDeviceInfo.Apply(MagiscanSettings.CreateDefault());
 
         void OnEnable()
         {
@@ -159,46 +148,6 @@ namespace Magiscan.Editor
             connect.style.height = 28;
             connect.style.marginTop = 8;
             _content.Add(connect);
-
-            _content.Add(BuildAdvancedFoldout());
-        }
-
-        /// <summary>Server URL override for staging/QA. Hidden behind a collapsed foldout.</summary>
-        VisualElement BuildAdvancedFoldout()
-        {
-            var advanced = new Foldout { text = "Advanced", value = false };
-            advanced.style.marginTop = 14;
-            advanced.style.opacity = 0.8f;
-
-            var url = new TextField("Server URL") { value = EditorPrefs.GetString(BaseUrlOverrideKey, string.Empty) };
-            url.tooltip = $"Leave empty for the default ({MagiscanSettings.DefaultBaseUrl}). " +
-                          $"The {MagiscanSettings.BaseUrlEnvVar} environment variable also overrides the default.";
-            advanced.Add(url);
-
-            var apply = new Button(() =>
-            {
-                string value = (url.value ?? string.Empty).Trim();
-                if (string.IsNullOrEmpty(value))
-                    EditorPrefs.DeleteKey(BaseUrlOverrideKey);
-                else
-                    EditorPrefs.SetString(BaseUrlOverrideKey, value);
-                RecreateClient();
-                Rebuild();
-                ShowNotification(new GUIContent(string.IsNullOrEmpty(value) ? "Using default server" : "Server URL applied"));
-            }) { text = "Apply" };
-            apply.style.marginTop = 2;
-            apply.style.alignSelf = Align.FlexStart;
-            advanced.Add(apply);
-            return advanced;
-        }
-
-        void RecreateClient()
-        {
-            _link.Changed -= OnLinkChanged;
-            _link.Cancel();
-            _client = new MagiscanClient(CreateSettings(), new UnityWebRequestHttpClient(), new EditorPrefsTokenStorage());
-            _link = new MagiscanLinkController(_client);
-            _link.Changed += OnLinkChanged;
         }
 
         // ---- Linking --------------------------------------------------------
