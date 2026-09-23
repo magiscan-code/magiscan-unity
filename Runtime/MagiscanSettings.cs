@@ -13,7 +13,7 @@ namespace Magiscan
         public const string DefaultIntegrationType = "unity";
 
         /// <summary>Plugin version, reported to the server as <c>appVersion</c>. Keep in sync with package.json.</summary>
-        public const string PluginVersion = "0.3.0";
+        public const string PluginVersion = "0.3.1";
 
         public string BaseUrl { get; set; } = DefaultBaseUrl;
         public string IntegrationType { get; set; } = DefaultIntegrationType;

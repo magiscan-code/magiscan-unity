@@ -1,6 +1,6 @@
 {
   "name": "com.magiscan",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "displayName": "Magiscan AI — 3D Scanner",
   "description": "Import 3D scans from the Magiscan AI app directly into Unity. Link your account with a QR code, browse your scans, and drop the models into your scene.",
   "unity": "2021.3",
