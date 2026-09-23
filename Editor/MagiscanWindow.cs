@@ -342,12 +342,8 @@ namespace Magiscan.Editor
         {
             var toolbar = new VisualElement();
             toolbar.style.flexDirection = FlexDirection.Row;
-            toolbar.style.justifyContent = Justify.SpaceBetween;
+            toolbar.style.justifyContent = Justify.FlexEnd;
             toolbar.style.marginBottom = 8;
-
-            var title = Header(_tasks.Count > 0 ? $"Your scans · {_tasks.Count}" : "Your scans");
-            title.style.marginBottom = 0;
-            toolbar.Add(title);
 
             var buttons = new VisualElement { style = { flexDirection = FlexDirection.Row } };
             var refresh = new Button(RefreshTasks) { text = "Refresh" };

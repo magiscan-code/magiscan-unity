@@ -4,7 +4,7 @@ All notable changes to this package are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2026-09-21
+## [0.3.0] - 2026-09-23
 
 ### Added
 - The **Runtime Browser** sample declared in `package.json` now actually exists
@@ -21,6 +21,8 @@ All notable changes to this package are documented here. The format is based on
   uses is available there; CI will verify the matrix.
 - The `com.unity.nuget.newtonsoft-json` dependency is now pinned at 3.0.2 (the lowest 3.x)
   instead of 3.2.1, so projects that already ship a newer Json package resolve without conflict.
+- The scan list drops its header line; Refresh and Disconnect sit at the top right, leaving more
+  room for the grid.
 
 ### Fixed
 - `MagiscanLinkController.Begin()` is no longer `async void`: the flow is exposed as an awaitable
